@@ -1,29 +1,20 @@
+"""
+Data loading and augmentation transforms for sign language images.
+"""
+import torch
 from pathlib import Path
+from torchvision import transforms
+from torchvision.datasets import ImageFolder
+from torch.utils.data import DataLoader
 
-from loguru import logger
-from tqdm import tqdm
-import typer
-
-from msl_recognition.config import PROCESSED_DATA_DIR
-
-app = typer.Typer()
-
-
-@app.command()
-def main(
-    # ---- REPLACE DEFAULT PATHS AS APPROPRIATE ----
-    input_path: Path = PROCESSED_DATA_DIR / "dataset.csv",
-    output_path: Path = PROCESSED_DATA_DIR / "features.csv",
-    # -----------------------------------------
-):
-    # ---- REPLACE THIS WITH YOUR OWN CODE ----
-    logger.info("Generating features from dataset...")
-    for i in tqdm(range(10), total=10):
-        if i == 5:
-            logger.info("Something happened for iteration 5.")
-    logger.success("Features generation complete.")
-    # -----------------------------------------
-
-
-if __name__ == "__main__":
-    app()
+def get_data_loader(data_dir: Path, subset: str, batch_size: int = 32, num_workers: int = 4):
+    transform = transforms.Compose([
+        transforms.Resize((128, 128)),
+        transforms.RandomHorizontalFlip(),
+        transforms.RandomRotation(15),
+        transforms.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2),
+        transforms.ToTensor(),
+    ])
+    dataset = ImageFolder(data_dir / subset, transform=transform)
+    loader = DataLoader(dataset, batch_size=batch_size, shuffle=True, num_workers=num_workers)
+    return loader
