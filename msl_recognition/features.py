@@ -1,20 +1,26 @@
 """
-Data loading and augmentation transforms for sign language images.
+Feature engineering and landmark preprocessing
 """
-import torch
-from pathlib import Path
-from torchvision import transforms
-from torchvision.datasets import ImageFolder
-from torch.utils.data import DataLoader
+import numpy as np
 
-def get_data_loader(data_dir: Path, subset: str, batch_size: int = 32, num_workers: int = 4):
-    transform = transforms.Compose([
-        transforms.Resize((128, 128)),
-        transforms.RandomHorizontalFlip(),
-        transforms.RandomRotation(15),
-        transforms.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2),
-        transforms.ToTensor(),
-    ])
-    dataset = ImageFolder(data_dir / subset, transform=transform)
-    loader = DataLoader(dataset, batch_size=batch_size, shuffle=True, num_workers=num_workers)
-    return loader
+
+def normalize_landmarks(landmarks):
+    """
+    Normalize landmarks to be centered at wrist and scaled by palm size.
+    
+    Args:
+        landmarks: Array of shape (n_samples, 63) where each row is flattened x,y,z coords
+    
+    Returns:
+        Normalized landmarks array of same shape
+    """
+    landmarks = landmarks.reshape(-1, 21, 3)
+    
+    # Center around wrist (landmark 0)
+    centered = landmarks - landmarks[:, 0:1, :]
+    
+    # Scale by palm size (distance between wrist and middle finger MCP)
+    scale = np.linalg.norm(centered[:, 9:10, :], axis=2)  # MCP joint
+    normalized = centered / (scale + 1e-8)[:, :, np.newaxis]
+    
+    return normalized.reshape(-1, 63)
