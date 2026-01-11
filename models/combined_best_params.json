@@ -1,0 +1,7 @@
+{
+  "filters": 166,
+  "dropout": 0.12204680747785748,
+  "learning_rate": 0.0004168826021582384,
+  "best_val_accuracy": 0.994796872138977,
+  "final_val_accuracy": 0.994796872138977
+}
